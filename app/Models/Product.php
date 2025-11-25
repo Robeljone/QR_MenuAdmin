@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
 
 class Product extends Model
 {
@@ -13,4 +14,11 @@ class Product extends Model
     'image',
     'status'
  ];
+
+ public function cate()
+ {
+    return $this->hasOne(Category::class,'id','category_id');
+ }
+
+
 }

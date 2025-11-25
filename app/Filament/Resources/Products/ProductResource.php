@@ -18,6 +18,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Table;
 
 class ProductResource extends Resource
@@ -33,23 +34,24 @@ class ProductResource extends Resource
         return $schema
             ->components([
                 Select::make('category_id')
-    ->label('Category')
-    ->options(Category::query()->pluck('name', 'id')),
+               ->label('Category')
+               ->options(Category::query()->pluck('name', 'id')),
                 TextInput::make('name')
                     ->required(),
                 Textarea::make('description')
                     ->required()
                     ->columnSpanFull(),
                 FileUpload::make('Image')
+                ->image()
                 ->disk('local')
-    ->directory('form-attachments')
-    ->storeFileNamesIn('Samplename')
-    ->visibility('public'),
+                ->directory('form-attachments')
+                ->preserveFilenames()
+                ->visibility('public'),
                 Select::make('status')
-    ->options([
-        '1' => 'Active',
-        '2' => 'Passive'
-    ]),
+                  ->options([
+                      '1' => 'Active',
+                      '2' => 'Passive'
+                  ]),
             ]);
     }
 
@@ -58,14 +60,15 @@ class ProductResource extends Resource
         return $table
             ->recordTitleAttribute('Product')
             ->columns([
-                TextColumn::make('category_id')
-                    ->numeric()
+                TextColumn::make('cate.name')
                     ->sortable(),
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('status')
-                    ->numeric()
-                    ->sortable(),
+                BadgeColumn::make('status')
+                     ->colors([
+                         'primary'=>'1',
+                         'secondary' => '2',
+                     ]),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
