@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Company extends Model
+{
+    protected $table ='restaurants';
+
+    protected $fillable = [
+        'name',
+        'bot_token',
+        'greeting',
+        'location',
+        'status'
+    ];
+}

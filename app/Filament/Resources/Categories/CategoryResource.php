@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Categories;
 
 use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
+use App\Models\Company;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -16,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoryResource extends Resource
 {
@@ -25,19 +27,44 @@ class CategoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Category';
 
+    public static function getEloquentQuery(): Builder
+       {
+           $query = parent::getEloquentQuery();
+
+           $user = auth()->user();
+
+           if ($user->role = 'owner') {
+               // Limit categories based on owner’s company
+               $query->where('company_id', $user->company_id);
+           }
+
+           return $query;
+       }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('name')
                     ->required(),
+                Select::make('company_id')
+                ->label('Restaurant')
+                ->options(function () {
+                 $user = auth()->user();
+                 if ($user->company_id) {
+                     return Company::where('id', $user->company_id)
+                         ->pluck('name', 'id')
+                         ->toArray();
+                 }
+                 return Company::pluck('name', 'id')->toArray();
+                             }),
                 Select::make('status')
-    ->options([
-        '1' => 'Active',
-        '2' => 'Passive'
-    ]),
-            ]);
-    }
+                    ->options([
+                        '1' => 'Active',
+                        '2' => 'Passive'
+                    ])
+                     ]);
+                 }
 
     public static function table(Table $table): Table
     {
@@ -59,7 +86,7 @@ class CategoryResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+
             ])
             ->recordActions([
                 EditAction::make(),
@@ -78,4 +105,9 @@ class CategoryResource extends Resource
             'index' => ManageCategories::route('/'),
         ];
     }
+
+        public static function getNavigationGroup(): ?string
+{
+    return 'Management';
+}
 }

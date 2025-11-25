@@ -1,74 +1,72 @@
 <?php
 
-namespace App\Filament\Resources\Products;
+namespace App\Filament\Resources\Users;
 
-use App\Filament\Resources\Products\Pages\ManageProducts;
-use App\Models\Product;
-use App\Models\Category;
+use App\Filament\Resources\Users\Pages\ManageUsers;
+use App\Models\User;
+use App\Models\Company;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Table;
+use Filament\Forms\Components\Select;
 
-class ProductResource extends Resource
+class UserResource extends Resource
 {
-    protected static ?string $model = Product::class;
+    protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'Product';
+    protected static ?string $recordTitleAttribute = 'User';
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('category_id')
-               ->label('Category')
-               ->options(Category::query()->pluck('name', 'id')),
                 TextInput::make('name')
                     ->required(),
-                Textarea::make('description')
-                    ->required()
-                    ->columnSpanFull(),
-                FileUpload::make('Image')
-                ->image()
-                ->disk('local')
-                ->directory('form-attachments')
-                ->preserveFilenames()
-                ->visibility('public'),
-                Select::make('status')
-                  ->options([
-                      '1' => 'Active',
-                      '2' => 'Passive'
-                  ]),
+                TextInput::make('email')
+                    ->label('Email address')
+                    ->email()
+                    ->required(),
+                 Select::make('role')
+                 ->options([
+                     'admin' => 'Admin',
+                     'owner' => 'Owner'
+                 ])
+                 ->reactive()
+                 ->required(),
+                   Select::make('company_id')
+                ->label('Restaurant')
+                ->options(function () {
+                    return Company::pluck('name', 'id')->toArray();
+                })
+                ->disabled(fn (callable $get) => $get('role') !== 'owner') // disable if role != owner
+                ->required(fn (callable $get) => $get('role') === 'owner'),
+                TextInput::make('password')
+                    ->password()
+                    ->required(),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('Product')
+            ->recordTitleAttribute('User')
             ->columns([
-                TextColumn::make('cate.name')
-                    ->sortable(),
                 TextColumn::make('name')
                     ->searchable(),
-                BadgeColumn::make('status')
-                     ->colors([
-                         'primary'=>'1',
-                         'secondary' => '2',
-                     ]),
+                TextColumn::make('email')
+                    ->label('Email address')
+                    ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -95,11 +93,11 @@ class ProductResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageProducts::route('/'),
+            'index' => ManageUsers::route('/'),
         ];
     }
-            public static function getNavigationGroup(): ?string
+        public static function getNavigationGroup(): ?string
 {
-    return 'Management';
+    return 'Settings';
 }
 }
